@@ -106,6 +106,38 @@ func TestNoCachePollution(t *testing.T) {
 var SinkString string
 var SinkBool bool
 
+func TestRemove(t *testing.T) {
+	s := maphash.MakeSeed()
+	c := New[string, string](10, 100, func(k string) uint64 {
+		return maphash.String(s, k)
+	})
+
+	// Test removing non-existent key
+	_, ok := c.Remove("nonexistent")
+	if ok {
+		t.Error("Remove(nonexistent) should return false")
+	}
+
+	// Add and remove a key
+	c.Add("foo", "bar")
+	val, ok := c.Remove("foo")
+	if !ok || val != "bar" {
+		t.Errorf("Remove(foo)=%q, %v; want bar, true", val, ok)
+	}
+
+	// Verify key is gone
+	_, ok = c.Get("foo")
+	if ok {
+		t.Error("Get(foo) should return false after Remove")
+	}
+
+	// Test removing again returns false
+	_, ok = c.Remove("foo")
+	if ok {
+		t.Error("Remove(foo) should return false after already removed")
+	}
+}
+
 func BenchmarkGet(b *testing.B) {
 	s := maphash.MakeSeed()
 	t := New[string, string](64, 640, func(k string) uint64 {

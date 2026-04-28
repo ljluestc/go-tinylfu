@@ -154,4 +154,19 @@ func (t *T[K, V]) Add(key K, val V) {
 	}
 }
 
+// Remove removes an item from the cache, returning the value and a boolean indicating if it was found
+func (t *T[K, V]) Remove(key K) (V, bool) {
+	val, ok := t.data[key]
+	if !ok {
+		return *new(V), false
+	}
+
+	item := val.Value
+
+	if item.listid == 0 {
+		return t.lru.Remove(key)
+	}
+	return t.slru.Remove(key)
+}
+
 func ignore[K, V any](K, V) {}
